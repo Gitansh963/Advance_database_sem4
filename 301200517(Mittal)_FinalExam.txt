@@ -1,0 +1,117 @@
+--Name = Gitansh Mittal
+--Student Id = 301200517
+
+--Final Test Advance database
+
+--Question 1:
+
+SET SERVEROUTPUT ON;
+CREATE OR REPLACE FUNCTION ORDER_SHIP_Mittal_F (basket_id IN NUMBER)
+RETURN VARCHAR2
+IS
+  status_id BB_BASKETSTATUS.IDSTAGE%TYPE;
+  ship_date BB_BASKETSTATUS.DTSTAGE%TYPE;
+  order_date BB_BASKET.DTORDERED%TYPE;
+  v_days NUMBER;
+BEGIN
+  SELECT IDSTAGE, DTSTAGE
+  INTO status_id, ship_date
+  FROM BB_BASKETSTATUS
+  WHERE IDBASKET = basket_id
+  AND IDSTAGE = 5;
+  SELECT DTORDERED
+  INTO order_date
+  FROM BB_BASKET
+  WHERE IDBASKET = basket_id;
+
+  IF status_id = 5 THEN
+    v_days := ship_date - order_date;
+    IF v_days <= 1 THEN
+      RETURN 'OK';
+    ELSE
+      RETURN 'CHECK';
+    END IF;
+  ELSE
+    RETURN 'Not shipped';
+  END IF;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RETURN 'Basket not found';
+END;
+/
+
+
+DECLARE
+  basket_id NUMBER;
+  v_result VARCHAR2(20);
+BEGIN
+  -- Test case 1: Shipped within a day
+  basket_id := 4;
+  v_result := ORDER_SHIP_Mittal_F(basket_id);
+  DBMS_OUTPUT.PUT_LINE('Basket ' || basket_id || ': ' || v_result);
+
+  -- Test case 2: Shipped after a day
+  basket_id := 1002;
+  v_result := ORDER_SHIP_Mittal_F(basket_id);
+  DBMS_OUTPUT.PUT_LINE('Basket ' || basket_id || ': ' || v_result);
+
+  -- Test case 3: Not shipped yet
+  basket_id := 3;
+  v_result := ORDER_SHIP_Mittal_F(basket_id);
+  DBMS_OUTPUT.PUT_LINE('Basket ' || basket_id || ': ' || v_result);
+  
+  -- Test case 4: Basket not found
+  basket_id := 12;
+  v_result := ORDER_SHIP_Mittal_F(basket_id);
+  DBMS_OUTPUT.PUT_LINE('Basket ' || basket_id || ': ' || v_result);
+END;
+/
+
+
+--Question 2:
+
+CREATE OR REPLACE TRIGGER trg_mittal_pledge
+  BEFORE INSERT ON DD_PLEDGE
+  FOR EACH ROW
+DECLARE
+  l_count NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO l_count
+  FROM DD_PLEDGE
+  WHERE IDDONOR = :NEW.IDDONOR;
+
+  :NEW.FIRSTPLEDGE := CASE l_count
+                        WHEN 0 THEN 'Y'
+                        ELSE 'N'
+                      END;
+END;
+/
+
+
+--Test Cases
+--Case One
+-- Inserting New Pledge for Donor second time - expected answer = N(No)
+INSERT INTO DD_PLEDGE (IDPLEDGE, IDDONOR, PLEDGEAMT) VALUES (115, 310, 100);
+SELECT * FROM DD_PLEDGE WHERE IDDONOR = 310;
+/
+--Case Two
+-- Inserting New Pledge for Donor for first time - expected answer = Y(Yes)
+INSERT INTO DD_PLEDGE (IDPLEDGE, IDDONOR, PLEDGEAMT) VALUES (121, 305, 200);
+SELECT * FROM DD_PLEDGE WHERE IDDONOR = 305;
+/
+--Case Three
+---- Inserting New Pledge for same Donor used in case two for second time - expected answer = N(No)
+INSERT INTO DD_PLEDGE (IDPLEDGE, IDDONOR, PLEDGEAMT) VALUES (122, 305, 100);
+SELECT * FROM DD_PLEDGE WHERE IDDONOR = 305;
+/
+
+--Question 3:
+
+
+1.
+db.restaurants.find({$and: [{borough: 'Manhattan'},{cuisine: 'American '}, {name: 'Westside Restaurant'}]},{_id: 1, address: 1})
+
+
+2.
+db.restaurants.find({$and: [{borough: 'Manhattan'},{cuisine: 'American '}, {name: 'Toast'}]},{_id:0, address: 1, grades:1})
+
